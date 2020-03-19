@@ -4,7 +4,11 @@
       <div slot="center" class="center">购物街</div>
     </nav-bar>
 
-    <scroll class="scrollheight" ref="scrollview">
+    <scroll class="scrollheight" ref="mychild"
+            :probe-type="3"
+            @scrollPosition="contentScroll"
+            :pull-up-load="true"
+            @pullingUp="loadMore">
       <home-swiper :list='banners.list'/>
       <line-bar/>
       <home-recommend-view :recommend='recommends.list'/>
@@ -15,11 +19,9 @@
                   :tabControls="['流行','新款','精选']" 
                   @tabClick="tabClick" />
       <goods-list :goods="this.goods[currentType].list"></goods-list>
-
-      <div v-for='item in 100' :key="item">{{item}}</div>
     </scroll>
-
-    <back-top @click.native="backClick"></back-top>
+    <line-bar/>
+    <back-top @click.native="backClick" v-show="showBackTop" />
   </div>
 </template>
 
@@ -36,7 +38,7 @@ import {HomeSwiper,HomeRecommendView,HomeFeatureView} from 'views/home/childComp
 
 import {getHomeMultidata} from 'network/home'
 import {getHomeGoods} from 'network/home'
-
+import {throttle} from 'assets/js/global'
 export default {
   name: 'Home',
   components: {
@@ -59,7 +61,8 @@ export default {
         'new':{page:0,list:[]},
         'sell':{page:0,list:[]}
       },
-      currentType:'pop'
+      currentType:'pop',
+      showBackTop:false
     }
   },
   computed:{
@@ -89,9 +92,10 @@ export default {
     },
     backClick() {
       // native 监听组件的原生点击事件
-      console.log("回到顶部")
-      console.log(this.$refs.scrollview)
-      this.$refs.scrollview.scrollTop(0,0)
+      this.$refs.mychild.scrollTop(0,0)
+    },
+    contentScroll(position){
+      this.showBackTop = Math.abs(position.y) > 300;
     },
     getHomeMultidata() {
       getHomeMultidata().then(res=>{
@@ -101,10 +105,18 @@ export default {
     },
     getHomeGoods(type) {
       const page = this.goods[type].page+1;
-      getHomeGoods(type,page).then(res=>{
-        this.goods[type].list.push(...res.data.list)
+      throttle(getHomeGoods(type,page).then(res=>{
+        this.$nextTick(()=>{
+          this.goods[type].list.push(...res.data.list)
+          this.$refs.mychild.refresh();
+        })
         this.goods[type].page += 1
-      })
+        this.$refs.mychild.finishPullUp()
+      }),2000);
+      
+    },
+    loadMore() {
+      this.getHomeGoods(this.currentType);
     }
   }
  }
@@ -112,7 +124,6 @@ export default {
 <style>
 .home {
   z-index: 9;
-  position: relative;
 }
 .home-div {
   position:fixed;
@@ -127,9 +138,11 @@ export default {
 }
 .scrollheight {
   position: absolute;
+  overflow: hidden;
   top:44px;
   bottom: 71px;
   left: 0;
   right: 0;
+  height: calc(100% - 115px);
 }
 </style>
