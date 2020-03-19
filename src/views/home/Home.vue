@@ -3,20 +3,23 @@
     <nav-bar class="home-div">
       <div slot="center" class="center">购物街</div>
     </nav-bar>
-    <scroll class="content">
-      <home-swiper :list='banners.list'></home-swiper>
-      <line-bar></line-bar>
-      <home-recommend-view :recommend='recommends.list'></home-recommend-view>
-      <line-bar></line-bar>
-      <home-feature-view></home-feature-view>
-      <line-bar></line-bar>
-      <div class="m-tab-control">
-        <tab-control :tabControls="tabControls" @tabClick="tabClick"></tab-control>
-      </div>
+
+    <scroll class="scrollheight" ref="scrollview">
+      <home-swiper :list='banners.list'/>
+      <line-bar/>
+      <home-recommend-view :recommend='recommends.list'/>
+      <line-bar/>
+      <home-feature-view/>
+      <line-bar/>
+      <tab-control class="tab-control" 
+                  :tabControls="['流行','新款','精选']" 
+                  @tabClick="tabClick" />
       <goods-list :goods="this.goods[currentType].list"></goods-list>
 
       <div v-for='item in 100' :key="item">{{item}}</div>
     </scroll>
+
+    <back-top @click.native="backClick"></back-top>
   </div>
 </template>
 
@@ -25,6 +28,7 @@ import LineBar from 'components/common/line/LineBar'
 import NavBar from 'components/common/navbar/NavBar'
 import Scroll from 'components/common/scroll/Scroll'
 
+import BackTop from 'components/content/backTop/BackTop'
 import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goods/GoodsList'
 
@@ -39,6 +43,7 @@ export default {
     LineBar,
     NavBar,
     Scroll,
+    BackTop,
     TabControl,
     GoodsList,
     HomeSwiper,
@@ -49,7 +54,6 @@ export default {
     return {
       banners:[],
       recommends:[],
-      tabControls:['流行','新款','精选'],
       goods:{
         'pop':{page:0,list:[]},
         'new':{page:0,list:[]},
@@ -83,6 +87,12 @@ export default {
           break
       }
     },
+    backClick() {
+      // native 监听组件的原生点击事件
+      console.log("回到顶部")
+      console.log(this.$refs.scrollview)
+      this.$refs.scrollview.scrollTop(0,0)
+    },
     getHomeMultidata() {
       getHomeMultidata().then(res=>{
         this.banners = res.data.banner;
@@ -101,8 +111,8 @@ export default {
 </script>
 <style>
 .home {
-  margin-top: 44px;
   z-index: 9;
+  position: relative;
 }
 .home-div {
   position:fixed;
@@ -115,10 +125,11 @@ export default {
 .center {
   text-align: center;
 }
-.m-tab-control {
-  position: sticky;
-  top: 44px;
-  width: 100%;
-  z-index: 10;
+.scrollheight {
+  position: absolute;
+  top:44px;
+  bottom: 71px;
+  left: 0;
+  right: 0;
 }
 </style>

@@ -37,12 +37,13 @@ export default {
 
 <style>
   .tab-control {
-    display: flex;
-    height: 40px;
     line-height: 40px;
+    display: flex;
+    justify-content: space-between;
+    height: 40px;
     text-align: center;
-    background-color: #fff;
   }
+
   .tab-control-item {
     flex: 1;
   }
