@@ -3,13 +3,17 @@
     <nav-bar class="home-div">
       <div slot="center" class="center">购物街</div>
     </nav-bar>
-
+    <tab-control class="tab-control fixed" 
+                :tabControls="['流行','新款','精选']" 
+                @tabClick="tabClick"
+                ref='tabControl1' 
+                v-show="isTabFixed" />
     <scroll class="scrollheight" ref="mychild"
             :probe-type="3"
             @scrollPosition="contentScroll"
             :pull-up-load="true"
             @pullingUp="loadMore">
-      <home-swiper :list='banners.list'/>
+      <home-swiper :list='banners.list' @swiperImageLoad="swiperImageLoad"/>
       <line-bar/>
       <home-recommend-view :recommend='recommends.list'/>
       <line-bar/>
@@ -17,7 +21,9 @@
       <line-bar/>
       <tab-control class="tab-control" 
                   :tabControls="['流行','新款','精选']" 
-                  @tabClick="tabClick" />
+                  @tabClick="tabClick"
+                  ref='tabControl2' 
+                  v-show="!isTabFixed"/>
       <goods-list :goods="this.goods[currentType].list"></goods-list>
     </scroll>
     <line-bar/>
@@ -38,7 +44,7 @@ import {HomeSwiper,HomeRecommendView,HomeFeatureView} from 'views/home/childComp
 
 import {getHomeMultidata} from 'network/home'
 import {getHomeGoods} from 'network/home'
-import {throttle} from 'assets/js/global'
+import {debounce} from 'common/utils'
 export default {
   name: 'Home',
   components: {
@@ -62,7 +68,10 @@ export default {
         'sell':{page:0,list:[]}
       },
       currentType:'pop',
-      showBackTop:false
+      showBackTop:false,
+      tabOffsetTop:0,
+      isTabFixed:false,
+      saveY:0
     }
   },
   computed:{
@@ -70,13 +79,20 @@ export default {
       return this.goods[this.currentType].list
     }
   },
-  created:function(){
+  created() {
     this.getHomeMultidata()
     this.getHomeGoods('pop')
     this.getHomeGoods('new')
     this.getHomeGoods('sell')
   },
+  mounted() {
+    const refresh = debounce(this.$refs.mychild.refresh,200)
+    this.$bus.$on('itemImageLoad',()=>{
+      refresh();
+    })
+  },
   methods:{
+    // 事件监听动作
     tabClick(index) {
       switch (index) {
         case 0:
@@ -89,14 +105,27 @@ export default {
           this.currentType = 'sell'
           break
       }
+
+      this.$refs.tabControl1.currentIndex = index;
+      this.$refs.tabControl2.currentIndex = index;
     },
     backClick() {
       // native 监听组件的原生点击事件
       this.$refs.mychild.scrollTop(0,0)
     },
     contentScroll(position){
+      //backup 是否显示
       this.showBackTop = Math.abs(position.y) > 300;
+      //
+      this.isTabFixed = Math.abs(position.y) > this.tabOffsetTop
     },
+    loadMore() {
+      this.getHomeGoods(this.currentType)
+    },
+    swiperImageLoad() {
+      this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
+    },
+    // 数据加载部分
     getHomeMultidata() {
       getHomeMultidata().then(res=>{
         this.banners = res.data.banner;
@@ -105,26 +134,30 @@ export default {
     },
     getHomeGoods(type) {
       const page = this.goods[type].page+1;
-      throttle(getHomeGoods(type,page).then(res=>{
+      getHomeGoods(type,page).then(res=>{
         this.$nextTick(()=>{
           this.goods[type].list.push(...res.data.list)
-          this.$refs.mychild.refresh();
         })
         this.goods[type].page += 1
+
         this.$refs.mychild.finishPullUp()
-      }),2000);
-      
-    },
-    loadMore() {
-      this.getHomeGoods(this.currentType);
+      })
     }
+  },
+  destoryed() {
+    console.log("home destroyed")
+  },
+  // keep-alive 下才能使用的
+  activated() {
+    this.$refs.mychild.scrollTop(0,this.saveY,0)
+    this.$refs.mychild.refresh()
+  },
+  deactivated() {
+    this.saveY = this.$refs.mychild.getScrollY()
   }
  }
 </script>
 <style>
-.home {
-  z-index: 9;
-}
 .home-div {
   position:fixed;
   top: 0;
@@ -140,9 +173,15 @@ export default {
   position: absolute;
   overflow: hidden;
   top:44px;
-  bottom: 71px;
+  bottom: 59px;
   left: 0;
   right: 0;
-  height: calc(100% - 115px);
+}
+.fixed{
+  position: fixed;
+  top:43px;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 </style>

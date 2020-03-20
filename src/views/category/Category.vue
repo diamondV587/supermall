@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper" ref="wrapper">
+  <div class="wrapper-category" ref="wrapper">
     <div class="category">
       <ul>
         <li v-for="item in 200" :key="item">分类列表{{item}}</li>
@@ -38,7 +38,7 @@ export default {
  }
 </script>
 <style >
-.wrapper{
+.wrapper-category{
   height: 550px;
   background-color:crimson;
   overflow: hidden;

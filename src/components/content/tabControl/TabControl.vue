@@ -41,6 +41,7 @@ export default {
     display: flex;
     justify-content: space-between;
     height: 40px;
+    background-color: #fff;
     text-align: center;
   }
 

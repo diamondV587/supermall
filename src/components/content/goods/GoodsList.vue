@@ -2,8 +2,8 @@
   <div class="goods-list-box">
     <div class="goods-list">
       <!-- 循环部分 -->
-      <goods-list-item v-for="item in goods" 
-        :key="item.title" :good="item"></goods-list-item>
+      <goods-list-item v-for="(item,index) in goods" 
+        :key="index + item.title" :good="item"></goods-list-item>
     </div>
   </div>
 </template>
