@@ -8,7 +8,7 @@
                 @tabClick="tabClick"
                 ref='tabControl1' 
                 v-show="isTabFixed" />
-    <scroll class="scrollheight" ref="mychild"
+    <scroll class="scrollheight" ref="scroll"
             :probe-type="3"
             @scrollPosition="contentScroll"
             :pull-up-load="true"
@@ -24,7 +24,7 @@
                   @tabClick="tabClick"
                   ref='tabControl2' 
                   v-show="!isTabFixed"/>
-      <goods-list :goods="this.goods[currentType].list"></goods-list>
+      <goods-list :goods="getGoods"></goods-list>
     </scroll>
     <line-bar/>
     <back-top @click.native="backClick" v-show="showBackTop" />
@@ -36,7 +36,6 @@ import LineBar from 'components/common/line/LineBar'
 import NavBar from 'components/common/navbar/NavBar'
 import Scroll from 'components/common/scroll/Scroll'
 
-import BackTop from 'components/content/backTop/BackTop'
 import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goods/GoodsList'
 
@@ -45,13 +44,13 @@ import {HomeSwiper,HomeRecommendView,HomeFeatureView} from 'views/home/childComp
 import {getHomeMultidata} from 'network/home'
 import {getHomeGoods} from 'network/home'
 import {debounce} from 'common/utils'
+import {itemLisenerMixin,BackUpToTop} from 'common/mixin'
 export default {
   name: 'Home',
   components: {
     LineBar,
     NavBar,
     Scroll,
-    BackTop,
     TabControl,
     GoodsList,
     HomeSwiper,
@@ -67,8 +66,9 @@ export default {
         'new':{page:0,list:[]},
         'sell':{page:0,list:[]}
       },
+      showGoods:[],
       currentType:'pop',
-      showBackTop:false,
+      
       tabOffsetTop:0,
       isTabFixed:false,
       saveY:0
@@ -85,12 +85,14 @@ export default {
     this.getHomeGoods('new')
     this.getHomeGoods('sell')
   },
-  mounted() {
-    const refresh = debounce(this.$refs.mychild.refresh,200)
-    this.$bus.$on('itemImageLoad',()=>{
-      refresh();
-    })
-  },
+  // mounted() {
+  //   const refresh = debounce(this.$refs.scroll.refresh,200)
+  //   this.itemImageListener = refresh();
+  //   this.$bus.$on('itemImageLoad',()=>{
+  //     this.itemImageListener
+  //   })
+  // },
+  mixins:[itemLisenerMixin,BackUpToTop],
   methods:{
     // 事件监听动作
     tabClick(index) {
@@ -109,10 +111,7 @@ export default {
       this.$refs.tabControl1.currentIndex = index;
       this.$refs.tabControl2.currentIndex = index;
     },
-    backClick() {
-      // native 监听组件的原生点击事件
-      this.$refs.mychild.scrollTop(0,0)
-    },
+
     contentScroll(position){
       //backup 是否显示
       this.showBackTop = Math.abs(position.y) > 300;
@@ -140,7 +139,7 @@ export default {
         })
         this.goods[type].page += 1
 
-        this.$refs.mychild.finishPullUp()
+        this.$refs.scroll.finishPullUp()
       })
     }
   },
@@ -149,11 +148,14 @@ export default {
   },
   // keep-alive 下才能使用的
   activated() {
-    this.$refs.mychild.scrollTop(0,this.saveY,0)
-    this.$refs.mychild.refresh()
+    this.$refs.scroll.scrollTop(0,this.saveY,0)
+    this.$refs.scroll.refresh()
   },
   deactivated() {
-    this.saveY = this.$refs.mychild.getScrollY()
+    this.saveY = this.$refs.scroll.getScrollY()
+
+    //去掉全局事件的监听
+    this.$bus.$off('itemImgLoad',this.itemImageListener)
   }
  }
 </script>

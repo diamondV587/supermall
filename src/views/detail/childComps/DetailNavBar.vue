@@ -1,6 +1,6 @@
 <template>
   <nav-bar>
-    <div slot="left">
+    <div slot="left" class="left-arrow" @click="goBack">
       <img src="~assets/img/common/back.svg" alt="">
     </div>
     <div slot="center" class="title">
@@ -26,6 +26,10 @@ export default {
   methods:{
     tabClick(index) {
       this.currentIndex = index;
+      this.$emit('titleClick',index)
+    },
+    goBack() {
+      this.$router.go(-1)
     }
   }
  }
@@ -42,4 +46,14 @@ export default {
   .active{
     color: #f00;
   }
+  .left-arrow{
+    width: 100%;
+    text-align: center;
+  }
+  .left-arrow img{
+    display: inline-block;
+    width: 18px; 
+    vertical-align: middle;
+  }
+
 </style>

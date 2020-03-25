@@ -20,7 +20,6 @@ export default {
       box-shadow: 0 -1px 1px rgba(150,150,150,.08);
       display: flex;
       width: 100%;
-      z-index: 10;
   }
 
 </style>
