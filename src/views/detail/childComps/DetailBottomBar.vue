@@ -3,7 +3,7 @@
     <van-goods-action>
       <van-goods-action-icon icon="chat-o" text="客服" />
       <van-goods-action-icon
-        :info="$store.cartList.length"
+        :info="$store.state.cartList.length"
         @click="$router.push('/cart')"
         icon="cart-o"
         text="购物车"
@@ -40,8 +40,6 @@ export default {
       this.isShouCang = !this.isShouCang
     },
     addToCart() {
-      console.log("添加购物车")
-
       this.$emit('addCart')
     }
   }

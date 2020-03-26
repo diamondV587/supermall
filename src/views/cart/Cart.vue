@@ -14,15 +14,18 @@
 </template>
 
 <script>
-import NavBar from "@/components/common/navbar/NavBar";
+import NavBar from "components/common/navbar/NavBar";
 import CartList from "./children/CartList";
+import {mapGetters} from 'vuex'
 
 export default {
   name: "Cart",
   computed: {
-
+    ...mapGetters([
+      'cartLength'
+    ])
   },
-  components: { CartList, NavBar }
+  components: { NavBar,CartList }
 };
 </script>
 
@@ -30,6 +33,7 @@ export default {
 .nav-bar {
   font-weight: 600;
   color: white;
-  background-color: #ff8198;
+  text-align: center;
+  background-color: var(--color-tint);
 }
 </style>

@@ -34,6 +34,9 @@ import GoodsList from 'components/content/goods/GoodsList'
 import { getDetail,getRecommoned,GoodsInfo,Shop,GoodsParams} from 'network/detail'
 import {debounce} from 'common/utils'
 import {itemLisenerMixin,BackUpToTop} from 'common/mixin'
+
+import {mapActions} from 'vuex'
+
 export default {
   name: 'Detail',
   data() { 
@@ -98,13 +101,11 @@ export default {
       this.themeTopYs.push(Number.MAX_VALUE)    
     })
   },
-  mounted(){
-
-  },
-  updated() {
-  },
   mixins:[itemLisenerMixin,BackUpToTop],
   methods:{
+    ...mapActions([
+      'addToCart'
+    ]),
     imgLoad() {
       this.newRefresh()
 
@@ -136,16 +137,20 @@ export default {
       this.showBackTop = Math.abs(position.y) > 300;
     },
     addCart() {
-      console.log("添加到购物车")
-
       const product = {}
       product.image = this.topImages[0]
       product.title = this.goods.title
       product.desc = this.goods.desc
       product.price = this.goods.nowPrice
       product.iid = this.iid
+      // this.$store.dispatch('addToCart',product).then(res=>{
+      //   console.log(res)
+      // })
+      this.addToCart(product).then(res=>{
+        console.log(res);
 
-      this.$store.commit('addCart',product)
+        this.$toast.show(res);
+      })
     }
   },
   destoryed(){
